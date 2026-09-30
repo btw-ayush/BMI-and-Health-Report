@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BMI & Fitness Tracker CLI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F5EF;--ink:#14302A;--mute:#55706A;--line:#CBD8D0;--panel:#E6EDE6;--accent:#D9480F;--ok:#2F8F5B;--warn:#E8A317;--bad:#C92A2A;
+--term:#13202F;--termink:#E4EBF0;--sans:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Consolas,Menlo,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1B18;--ink:#E3EEE8;--mute:#93AAA2;--line:#2A403A;--panel:#172723;--accent:#FF8A4C;--term:#0A121C}}
+:root[data-theme="dark"]{--bg:#0F1B18;--ink:#E3EEE8;--mute:#93AAA2;--line:#2A403A;--panel:#172723;--accent:#FF8A4C;--term:#0A121C}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--sans)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 0;font-weight:600}
+header span{font-family:var(--mono);font-size:14px;color:var(--mute);font-weight:400}
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:40px;padding:34px 0 56px;align-items:start}
+h1{font-size:clamp(38px,6vw,68px);line-height:1.02;letter-spacing:-.025em;font-weight:800;margin:0 0 16px}
+.lead{color:var(--mute);max-width:46ch;margin:0 0 26px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:flex;flex-direction:column;font-size:14px;font-weight:600;gap:5px}
+label.full{grid-column:1/-1}
+input,select{font:inherit;font-weight:400;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:100%}
+.out{background:var(--term);color:var(--termink);border-radius:12px;padding:20px 22px;font:400 14.5px/1.65 var(--mono);overflow-x:auto;min-height:330px;white-space:pre}
+.out .hd{color:#5FD3B5}.out .p{color:#8FA3B5}.out .err{color:#FF8E7A}
+.cat{font-weight:500;padding:0 6px;border-radius:4px;color:#0A121C}
+.scale{margin:18px 0 6px;position:relative}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden}
+.bar i{display:block}
+.mk{position:absolute;top:-7px;width:4px;height:28px;background:var(--accent);border-radius:2px;transition:left .35s ease;box-shadow:0 0 0 2px var(--bg)}
+.lbls{display:flex;font-size:12.5px;color:var(--mute);margin-top:6px}
+.lbls span{text-align:center}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:clamp(26px,3.4vw,38px);letter-spacing:-.02em;line-height:1.1;margin:0 0 26px;font-weight:800;max-width:22ch}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px}
+.cols h3{margin:0 0 8px;font-size:20px;padding-top:12px;border-top:4px solid var(--accent)}
+.cols p,.cols li{color:var(--mute);margin:0 0 8px}
+.cols ul{padding-left:18px;margin:0}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.facts b{display:block;font-size:34px;letter-spacing:-.02em;line-height:1.1}
+.facts span{color:var(--mute);font-size:15px}
+pre.code{background:var(--term);color:var(--termink);font:400 14px/1.7 var(--mono);padding:20px 22px;border-radius:12px;overflow-x:auto;margin:0}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px}
+.tree{font:400 14px/1.7 var(--mono);color:var(--mute);white-space:pre;overflow-x:auto;margin:0}
+footer{padding:34px 0 46px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
+@media (max-width:820px){.hero,.two{grid-template-columns:1fr}.cols{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div>BMI &amp; Fitness Tracker</div><span>python main.py</span></header>
+
+<main>
+<div class="hero">
+  <div>
+    <h1>Your numbers, worked out in the terminal.</h1>
+    <p class="lead">A Python command-line app that calculates BMI, daily calories and water intake, then keeps a history so you can see progress. Try the same calculations here.</p>
+    <form id="f" onsubmit="return false" aria-label="Calculator">
+      <label class="full">Name<input id="name" value="Asha" maxlength="50" autocomplete="off"></label>
+      <label>Age (years)<input id="age" type="number" value="25" inputmode="numeric"></label>
+      <label>Sex<select id="sex"><option value="female">Female</option><option value="male">Male</option></select></label>
+      <label>Height (cm)<input id="h" type="number" value="165" inputmode="decimal"></label>
+      <label>Weight (kg)<input id="w" type="number" value="60" inputmode="decimal"></label>
+      <label class="full">Activity level<select id="act"></select></label>
+    </form>
+  </div>
+  <div>
+    <div class="out" id="out" role="status" aria-live="polite"></div>
+    <div class="scale" aria-hidden="true">
+      <div class="bar"><i style="flex:3.5;background:var(--warn)"></i><i style="flex:6.5;background:var(--ok)"></i><i style="flex:5;background:var(--warn)"></i><i style="flex:10;background:var(--bad)"></i></div>
+      <div class="mk" id="mk"></div>
+    </div>
+    <div class="lbls"><span style="flex:3.5">Under</span><span style="flex:6.5">Normal 18.5&ndash;24.9</span><span style="flex:5">Over 25&ndash;29.9</span><span style="flex:10">Obese 30+</span></div>
+  </div>
+</div>
+
+<section>
+  <h2>Three modules, one workflow</h2>
+  <div class="cols">
+    <div><h3>Health metrics</h3><p>Turns age, sex, height, weight and activity into BMI, BMR (Mifflin-St Jeor), maintenance calories, water intake and a healthy weight range.</p></div>
+    <div><h3>Classification and advice</h3><p>Sorts BMI into WHO categories, sets a calorie target, colour-codes the result and gives suggestions matched to the category and activity level.</p></div>
+    <div><h3>History and progress</h3><p>Saves every assessment to a local JSON file. View, annotate or delete records, then get a report of weight change, trend and average BMI.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Built to be reliable</h2>
+  <div class="facts">
+    <div><b>12</b><span>modules in the package</span></div>
+    <div><b>62</b><span>unit tests, all passing</span></div>
+    <div><b>0</b><span>runtime dependencies</span></div>
+    <div><b>100%</b><span>offline, data stays local</span></div>
+  </div>
+  <ul style="color:var(--mute);margin:26px 0 0;padding-left:20px;max-width:70ch">
+    <li>Every input is validated and re-prompted, and you can type <code>cancel</code> at any prompt.</li>
+    <li>Saves are atomic, and a corrupt history file is backed up instead of lost.</li>
+    <li>Events and errors go to a rotating log file.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="two">
+    <div>
+      <h2>Run it yourself</h2>
+<pre class="code">git clone &lt;your-repo-url&gt;
+cd fitness-tracker-cli
+python main.py
+
+# run the tests
+pip install pytest
+python -m pytest -v</pre>
+    </div>
+    <div>
+      <h2>Project layout</h2>
+<pre class="tree">fitness-tracker-cli/
+  main.py
+  fitness_tracker/
+    calculators.py  classifier.py
+    advice.py       services.py
+    validators.py   storage.py
+    analytics.py    formatter.py
+    cli.py  config.py  models.py  logger.py
+  tests/   docs/   statement.md</pre>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>Built with Python for the VITyarthi Build Your Own Project. This tool gives general wellness information, not medical advice. BMI does not account for muscle mass or body composition.</footer>
+</div>
+
+<script>
+const ACT={sedentary:["Sedentary (little or no exercise)",1.2,0],light:["Light (1-3 days/week)",1.375,.3],moderate:["Moderate (3-5 days/week)",1.55,.5],active:["Active (6-7 days/week)",1.725,.7],very_active:["Very active (hard daily)",1.9,1]};
+const TIPS={underweight:["Add calorie-dense, nutritious foods (nuts, dairy, whole grains).","Prefer strength training to build muscle.","Eat 4-5 smaller meals through the day."],
+normal:["Great work! Maintain a balanced diet and regular routine.","Mix cardio and strength training through the week.","Keep sleep at 7-9 hours for recovery."],
+overweight:["Aim for a modest calorie deficit and gradual weight loss.","Add 30 minutes of brisk walking or cycling most days.","Cut back on sugary drinks and processed snacks."],
+obese:["Consider consulting a doctor or dietitian for a plan.","Start with low-impact activity and build up.","Track meals and aim for slow, sustainable progress."]};
+const ADJ={underweight:300,normal:0,overweight:-500,obese:-500};
+const COL={underweight:"#E8A317",normal:"#5FD3B5",overweight:"#E8A317",obese:"#FF8E7A"};
+const r1=x=>Math.round(x*10)/10, $=id=>document.getElementById(id);
+const sel=$("act"); for(const k in ACT){const o=document.createElement("option");o.value=k;o.textContent=ACT[k][0];if(k==="moderate")o.selected=true;sel.appendChild(o);}
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function validate(){
+  const age=Number($("age").value),h=Number($("h").value),w=Number($("w").value);
+  if(!Number.isInteger(age)||age<15||age>100) return "Age must be a whole number between 15 and 100 years.";
+  if(!isFinite(h)||h<100||h>250||$("h").value==="") return "Height must be between 100 and 250 cm.";
+  if(!isFinite(w)||w<20||w>300||$("w").value==="") return "Weight must be between 20 and 300 kg.";
+  return null;
+}
+function calc(){
+  const name=$("name").value.trim()||"You", age=+$("age").value, h=+$("h").value, w=+$("w").value, sex=$("sex").value, act=$("act").value, hm=h/100;
+  const bmi=r1(w/(hm*hm));
+  const cat=bmi<18.5?"underweight":bmi<25?"normal":bmi<30?"overweight":"obese";
+  const bmr=r1(10*w+6.25*h-5*age+(sex==="male"?5:-161));
+  const tdee=r1(bmr*ACT[act][1]);
+  return {name,bmi,cat,bmr,tdee,target:r1(tdee+ADJ[cat]),water:Math.round((w*.035+ACT[act][2])*100)/100,lo:r1(18.5*hm*hm),hi:r1(24.9*hm*hm)};
+}
+function render(){
+  const out=$("out"), err=validate();
+  if(err){out.innerHTML='<span class="p">$ python main.py</span>\n\n<span class="err">  ! '+err+'</span>';return;}
+  const d=calc(), pad=(s,n)=>s.padEnd(n);
+  out.innerHTML='<span class="p">$ python main.py</span>\n\n<span class="hd">--- Results for '+esc(d.name)+' ---</span>\n'+
+   pad("BMI:",21)+d.bmi.toFixed(1)+'  <span class="cat" style="background:'+COL[d.cat]+'">'+d.cat.toUpperCase()+'</span>\n'+
+   pad("Healthy weight:",21)+d.lo+"-"+d.hi+" kg\n"+pad("BMR:",21)+Math.round(d.bmr)+" kcal/day\n"+
+   pad("Maintenance (TDEE):",21)+Math.round(d.tdee)+" kcal/day\n"+pad("Target calories:",21)+Math.round(d.target)+" kcal/day\n"+
+   pad("Water intake:",21)+d.water+" L/day\n\nSuggestions:\n"+TIPS[d.cat].map(t=>"  * "+t).join("\n");
+  const pos=(Math.min(40,Math.max(15,d.bmi))-15)/25*100;
+  $("mk").style.left="calc("+pos+"% - 2px)";
+}
+document.querySelectorAll("#f input,#f select").forEach(e=>e.addEventListener("input",render));
+render();
+</script>
+</body>
+</html>
